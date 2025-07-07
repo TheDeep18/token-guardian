@@ -1,27 +1,57 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import React, { useState, useEffect, useRef } from "react";
+import AppLayout from "./components/AppLayout.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import SignupPage from "./pages/SignupPage.jsx";
+import InputProcessContainer from "./components/InputProcessContainer.jsx";
+import ManageMappingsPage from "./pages/ManageMappingsPage.jsx";
+import ProjectsPage from "./components/ProjectsPage.jsx";
+import ToastNotification from "./components/ToastNotification.jsx";
+import InputFigmaCssPage from "./pages/InputFigmaCssPage.jsx";
 
-const queryClient = new QueryClient();
+// Simulated Routing: In Lovable, currentRoute will be managed by useState/useEffect or a router.
+const currentRoute: string = "input-figma-css"; // Change this value to simulate different pages
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
+  const toastTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = (message, type) => {
+    setToast({ message, type, isVisible: true });
+    if (toastTimeout.current) clearTimeout(toastTimeout.current);
+    toastTimeout.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  // Helper to render the correct page based on currentRoute
+  const renderPage = () => {
+    if (currentRoute === "auth") {
+      return <LoginPage showToast={showToast} />;
+    }
+    if (currentRoute === "signup") {
+      return <SignupPage showToast={showToast} />;
+    }
+    if (currentRoute === "projects") {
+      return <ProjectsPage showToast={showToast} />;
+    }
+    if (currentRoute === "input-figma-css" || !currentRoute) {
+      return <InputFigmaCssPage />;
+    }
+    if (currentRoute === "manage-mappings") {
+      return <ManageMappingsPage showToast={showToast} />;
+    }
+    // Default: Page not found
+    return <div className="text-center text-red-600 text-3xl mt-20">Page Not Found!</div>;
+  };
+
+  return (
+    <>
+      <AppLayout>
+        {renderPage()}
+      </AppLayout>
+      <ToastNotification message={toast.message} type={toast.type} isVisible={toast.isVisible} />
+    </>
+  );
+};
 
 export default App;
